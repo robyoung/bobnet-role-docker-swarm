@@ -1,0 +1,27 @@
+---
+
+bobnet_ansible_user: "ansible"
+
+bobnet_hosts: []
+# - host: bob01
+#   os:   hypriot
+
+# bobnet_swarm_manager: "bob01"
+
+bobnet_networking: []
+# bob01:
+#   eth0_ipv4_address: "192.0.2.65"
+#
+# bob02:
+#   eth0_ipv4_address: "192.0.2.66"
+
+bobnet_tls_certificates: []
+# - filename: "my.example.com.private.pem"
+#   content: "{{ super_private_key }}"
+# - filename: "my.example.com.fullchain.pem"
+#   content: "full cert chain"
+
+bobnet_swarm_labels: []
+# - host: bob01
+#   labels:
+#     - "label_name=label_value"

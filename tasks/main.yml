@@ -1,0 +1,39 @@
+---
+
+- set_fact:
+    manager_address: "{{ bobnet_networking[bobnet_swarm_manager].eth0_ipv4_address }}"
+    is_manager: "{{ inventory_hostname == bobnet_swarm_manager }}"
+    is_worker: "{{ inventory_hostname != bobnet_swarm_manager }}"
+
+- name: "Get swarm status"
+  become: true
+  shell: "docker info | grep '^Swarm:' | awk '{print $2}'"
+  register: swarm_status
+
+- name: "Initialise swarm"
+  become: true
+  command: "docker swarm init --advertise-addr={{ manager_address }}:2377"
+  when: "is_manager and 'inactive' == swarm_status.stdout"
+
+- name: "Get swarm worker token"
+  become: true
+  command: "docker swarm join-token -q worker"
+  register: swarm_worker_token
+  when: "is_manager"
+
+- set_fact:
+    worker_token: "{{ hostvars[bobnet_swarm_manager].swarm_worker_token.stdout }}"
+    worker_address: "{{ bobnet_networking[inventory_hostname].eth0_ipv4_address }}"
+
+- name: "Join worker node"
+  become: true
+  command: "docker swarm join --advertise-addr={{ worker_address }}:2377 --token={{ worker_token }} {{ manager_address }}:2377"
+  when: "is_worker and 'inactive' == swarm_status.stdout"
+
+- name: "Add node labels"
+  become: true
+  command: "docker node update --label-add {{ item.1 }} {{ item.0.host }}"
+  with_subelements:
+    - "{{ bobnet_swarm_labels }}"
+    - "labels"
+  when: "is_manager"
